@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quality App</title>
+
+<!-- Web App Manifest (PWA Setup for App Icon & Name) -->
+<link rel="manifest" href='data:application/manifest+json,{
+  "name": "Quality App",
+  "short_name": "Quality App",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#eef2f7",
+  "theme_color": "#1a73e8",
+  "icons": [{
+    "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231a73e8%22/><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>",
+    "sizes": "512x512",
+    "type": "image/svg+xml"
+  }]
+}'>
+
+<!-- Apple iOS Support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Quality App">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --bg: #eef2f7;
+    --panel: #ffffff;
+    --panel-raised: #f3f6fa;
+    --line: #e1e6ed;
+    --yellow: #1a73e8;
+    --yellow-dim: #cfe0fb;
+    --text: #1a1f27;
+    --text-dim2: #667085;
+    --red: #d93025;
+    --green: #1e8e3e;
+    --orange: #e65100;
+    --radius: 10px;
+    --f-display: 'Arial Narrow', Arial, sans-serif;
+    --f-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    --f-mono: 'Consolas', 'Courier New', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--f-body);
+    min-height:100vh;
+    padding-bottom:50px;
+  }
+  .wrap{max-width:850px; margin:0 auto; padding:16px;}
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 4px; border-bottom:2px solid var(--yellow-dim);
+    margin-bottom:14px;
+  }
+  .brand{
+    font-family:var(--f-display); font-weight:700;
+    font-size:24px; letter-spacing:0.5px; text-transform:uppercase;
+  }
+  .brand span{color:var(--yellow);}
+  .who{font-family:var(--f-mono); font-size:12px; color:var(--text-dim2); text-align:right;}
+  .who b{color:var(--text);}
+
+  .tabs{display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; padding-bottom:4px;}
+  .tab-btn{
+    flex:1; min-width:110px; padding:11px 8px; text-align:center; border-radius:var(--radius);
+    border:1.5px solid var(--line); background:var(--panel);
+    font-family:var(--f-display); font-weight:700; font-size:13.5px;
+    letter-spacing:0.5px; text-transform:uppercase; color:var(--text-dim2);
+    cursor:pointer; user-select:none; white-space:nowrap;
+  }
+  .tab-btn.active{ border-color:var(--yellow); color:#ffffff; background:var(--yellow); }
+
+  #storageStatus{
+    font-family:var(--f-mono); font-size:12px; padding:8px 10px;
+    border-radius:8px; margin-bottom:14px; background:var(--panel-raised);
+    border:1px solid var(--line);
+  }
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; margin-bottom:16px;
+  }
+  .card-title{
+    font-family:var(--f-display); font-weight:700; font-size:15px;
+    text-transform:uppercase; letter-spacing:1px; color:var(--yellow);
+    margin:0 0 12px 0; display:flex; justify-content:space-between; align-items:center;
+  }
+  label{
+    display:block; font-size:11.5px; color:var(--text-dim2); margin-bottom:5px;
+    text-transform:uppercase; letter-spacing:0.5px; font-weight:600;
+  }
+  .field{margin-bottom:12px;}
+  input[type=text], input[type=number], input[type=password], input[type=time], input[type=date], textarea, select{
+    width:100%; background:var(--panel-raised); border:1px solid var(--line);
+    border-radius:8px; padding:10px 12px; color:var(--text); font-size:14px;
+    font-family:var(--f-body);
+  }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--yellow); }
+  textarea{resize:vertical; min-height:52px;}
+  .row2{display:flex; gap:10px;}
+  .row2 > div{flex:1;}
+  .row3{display:flex; gap:10px;}
+  .row3 > div{flex:1;}
+  .row4{display:flex; gap:8px;}
+  .row4 > div{flex:1;}
+
+  .search-box{
+    position:relative; margin-bottom:12px;
+  }
+  .search-box input{
+    padding-left:36px; border:1.5px solid var(--yellow); background:#fff;
+  }
+  .search-box::before{
+    content:"🔍"; position:absolute; left:12px; top:10px; font-size:14px; color:var(--text-dim2);
+  }
+
+  .btn{
+    display:block; width:100%; padding:12px 0; border:none; border-radius:8px;
+    font-family:var(--f-display); font-weight:700; font-size:15px;
+    letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; text-align:center;
+  }
+  .btn-primary{background:var(--yellow); color:#ffffff;}
+  .btn-primary:active{opacity:0.85;}
+
+  .stat-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom:16px; }
+  .stat-box{ background:var(--panel-raised); border:1px solid var(--line); border-radius:8px; padding:12px 8px; text-align:center; }
+  .stat-box .num{ font-family:var(--f-mono); font-weight:700; font-size:22px; color:var(--yellow); }
+  .stat-box .lbl{ font-size:10px; color:var(--text-dim2); text-transform:uppercase; letter-spacing:0.3px; margin-top:3px; }
+
+  .ticket{
+    position:relative; background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px; margin-bottom:10px; border-left:4px solid var(--yellow);
+  }
+  .ticket.final-pass{ border-left-color:var(--green); }
+  .ticket.final-fail{ border-left-color:var(--red); }
+  .ticket.setting-ticket{ border-left-color:var(--yellow); background:#f0f7ff; }
+  .ticket.issue-ticket{ border-left-color:var(--red); background:#fff5f5; }
+
+  .ticket-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px;}
+  .ticket-title{ font-family:var(--f-display); font-weight:700; font-size:18px; }
+  .entry-tag{
+    font-family:var(--f-mono); font-weight:700; background:var(--panel-raised);
+    padding:2px 6px; border-radius:4px; border:1px solid var(--line); color:var(--yellow); font-size:12px;
+  }
+  .ticket-sub{font-size:12px; color:var(--text-dim2); margin-top:2px;}
+  .badge{
+    display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px;
+    text-transform:uppercase; letter-spacing:0.4px;
+  }
+  .badge.approve, .badge.pass{background:rgba(30,142,62,0.18); color:var(--green);}
+  .badge.notapprove, .badge.fail{background:rgba(217,48,37,0.18); color:var(--red);}
+  .badge.setting{background:rgba(26,115,232,0.18); color:var(--yellow);}
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(15,23,42,0.85); backdrop-filter:blur(4px); display:flex;
+    align-items:center; justify-content:center; z-index:50; padding:20px; overflow-y:auto;
+  }
+  .login-card{
+    max-width:400px; width:100%; background:var(--panel); border-radius:16px;
+    overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.2);
+  }
+  .login-banner{
+    background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding:24px 16px; text-align:center; position:relative; border-bottom:3px solid var(--yellow);
+  }
+  .login-banner svg{ width:80px; height:80px; margin-bottom:8px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+  .login-banner h2{ margin:0; color:#ffffff; font-family:var(--f-display); letter-spacing:1px; font-size:20px; text-transform:uppercase; }
+  .login-banner p{ margin:4px 0 0 0; color:#94a3b8; font-size:12px; font-weight:500; }
+  .login-body{ padding:20px; }
+
+  .err-msg{color:var(--red); font-size:12.5px; margin:6px 0; min-height:16px;}
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--panel-raised); border:1px solid var(--yellow);
+    padding:10px 18px; border-radius:8px; font-size:14px; z-index:60;
+    opacity:0; transition:opacity .25s ease; pointer-events:none; max-width:90%; text-align:center;
+  }
+  .toast.show{opacity:1;}
+  table.dtable{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.dtable th{ background:var(--panel-raised); color:var(--text-dim2); font-size:10.5px; text-transform:uppercase; padding:8px 6px; text-align:left; border-bottom:1px solid var(--line); }
+  table.dtable td{ padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:middle; }
+
+  @media(max-width:600px){
+    .row2, .row3, .row4{ flex-direction:column; gap:0; }
+    .stat-grid{ grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">Quality<span>App</span></div>
+    <div class="who" id="whoBox">-</div>
+  </div>
+
+  <div id="storageStatus">System Check Completed</div>
+
+  <div id="mainApp" style="display:none;">
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <div class="tab-btn active" id="tabEntriesBtn" onclick="switchTab('entries')">In-Process Log</div>
+      <div class="tab-btn" id="tabFinalBtn" onclick="switchTab('final')">📋 Final Inspection</div>
+      <div class="tab-btn" id="tabDashboardBtn" onclick="switchTab('dashboard')">🔍 Machine Status</div>
+      <div class="tab-btn" id="tabKpiBtn" onclick="switchTab('kpi')">📈 Inspector KPI</div>
+    </div>
+
+    <!-- 1. IN-PROCESS LOG TAB -->
+    <div id="entriesView">
+      <div class="card">
+        <div class="card-title">नवीन In-Process Inspection Entry</div>
+        <div class="row3">
+          <div class="field"><label>Work Date</label><input type="date" id="fDate" readonly style="background:#e9eef5;cursor:not-allowed;"></div>
+          <div class="field">
+            <label>Shift</label>
+            <select id="fShift">
+              <option value="1st">1st</option>
+              <option value="2nd">2nd</option>
+              <option value="3rd">3rd</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select id="fType">
+              <option value="PRODUCTION">PRODUCTION</option>
+              <option value="SETTING">SETTING</option>
+            </select>
+          </div>
+        </div>
+        <div class="row3">
+          <div class="field"><label>Machine #</label><input type="text" id="fMachine" placeholder="उदा. MAEL-01"></div>
+          <div class="field">
+            <label>Machine Status</label>
+            <select id="fMachineState">
+              <option value="RUNNING">RUNNING / CHECK</option>
+              <option value="MACHINE OFF">MACHINE OFF</option>
+            </select>
+          </div>
+          <div class="field"><label>Part Number *</label><input type="text" id="fPart" placeholder="चालू Part No."></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Part SR#</label><input type="text" id="fPartSr" placeholder="उदा. 26E123"></div>
+          <div class="field"><label>Operation Name</label><input type="text" id="fOperation" placeholder="उदा. VMC 1ST"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Start Time *</label><input type="time" id="fStartTime"></div>
+          <div class="field"><label>End Time *</label><input type="time" id="fEndTime"></div>
+        </div>
+        <div class="field"><label>Approval Delay Reason (असल्यास)</label><input type="text" id="fDelayReason" placeholder="उदा. Gauge setting delay"></div>
+        <div class="row2">
+          <div class="field">
+            <label>CMM Status</label>
+            <select id="fCmm">
+              <option value="Not Checked">Not Checked</option>
+              <option value="OK">OK</option>
+              <option value="NOT OK">NOT OK</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Decision</label>
+            <select id="fStatus">
+              <option value="APPROVE">APPROVE</option>
+              <option value="NOT APPROVE">NOT APPROVE</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Remark</label><textarea id="fRemark" placeholder="तपासणी तपशील / शेरा"></textarea></div>
+        <button class="btn btn-primary" onclick="addEntry()">🔒 Save In-Process Entry</button>
+        <div class="err-msg" id="entryErr"></div>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-box">
+        <input type="text" id="ipSearch" onkeyup="renderInProcessEntries()" placeholder="Entry No (IP-001), Part, Machine किंवा Inspector शोधा...">
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0;">
+        <h3 style="margin:0; font-family:var(--f-display);">In-Process नोंदी</h3>
+        <span id="listCount" style="font-family:var(--f-mono); font-weight:700;">0</span>
+      </div>
+      <div id="entriesList"></div>
+    </div>
+
+    <!-- 2. FINAL INSPECTION TAB -->
+    <div id="finalView" style="display:none;">
+      <div class="card">
+        <div class="card-title">📦 Final Inspection Report Entry</div>
+        <div class="row3">
+          <div class="field"><label>Inspection Date</label><input type="date" id="finalDate"></div>
+          <div class="field">
+            <label>Shift</label>
+            <select id="finalShift">
+              <option value="1st">1st Shift</option>
+              <option value="2nd">2nd Shift</option>
+              <option value="3rd">3rd Shift</option>
+            </select>
+          </div>
+          <div class="field"><label>Inspector Name</label><input type="text" id="finalInspector" readonly style="background:#e9eef5;"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Part No / Description *</label><input type="text" id="finalPart" placeholder="उदा. Disc Carrier 082"></div>
+          <div class="field"><label>Heat No / Batch / Lot SR #</label><input type="text" id="finalLot" placeholder="उदा. LOT-2026-05"></div>
+        </div>
+        <div class="row4">
+          <div class="field"><label>Lot Quantity</label><input type="number" id="finalLotQty" value="100" min="1"></div>
+          <div class="field"><label>Inspected Qty</label><input type="number" id="finalInspQty" value="100" min="1"></div>
+          <div class="field"><label>Accepted Qty</label><input type="number" id="finalAccQty" value="98" min="0"></div>
+          <div class="field"><label>Rejected Qty</label><input type="number" id="finalRejQty" value="2" min="0"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Rework Qty</label><input type="number" id="finalRewQty" value="0" min="0"></div>
+          <div class="field">
+            <label>Final Lot Status</label>
+            <select id="finalStatus">
+              <option value="ACCEPTED">ACCEPTED (PASS)</option>
+              <option value="REJECTED">REJECTED (FAIL)</option>
+              <option value="REWORK">ACCEPTED WITH REWORK</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Defect Description / Reject Reason (जर असेल तर)</label><input type="text" id="finalDefects" placeholder="उदा. Bore ID undersize, Chamfer missing"></div>
+        <div class="field"><label>Remark / Disposition Note</label><textarea id="finalRemark" placeholder="फायनल क्लिअरन्स शेरा"></textarea></div>
+        <button class="btn btn-primary" onclick="addFinalEntry()">💾 Save Final Inspection Report</button>
+        <div class="err-msg" id="finalErr"></div>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-box">
+        <input type="text" id="fnSearch" onkeyup="renderFinalEntries()" placeholder="Entry No (FN-001), Part किंवा Lot No. शोधा...">
+      </div>
+
+      <div id="finalEntriesList"></div>
+    </div>
+
+    <!-- 3. MACHINE STATUS DASHBOARD -->
+    <div id="dashboardView" style="display:none;">
+      <div class="card">
+        <div class="card-title">🚨 Action Required & Setting Machines Dashboard</div>
+        <p style="font-size:13px; color:var(--text-dim2); margin-bottom:15px;">रिपब्लिक लाईनवर ज्या मशीन्सवर डिफेक्ट/विशेष शेरा आहे किंवा ज्या Setting वर आहेत त्यांची माहिती खालीलप्रमाणे:</p>
+        
+        <!-- SECTION 1: REMARK WITH DEFECTS/ISSUES -->
+        <div style="margin-bottom:20px;">
+          <h4 style="margin:0 0 10px 0; color:var(--red); font-family:var(--f-display); display:flex; align-items:center; gap:6px;">
+            ⚠️ Machines with Remarks / Issues (OK/- सोडून इतर)
+          </h4>
+          <div id="remarkIssueList"></div>
+        </div>
+
+        <hr style="border:0; border-top:1px dashed var(--line); margin:20px 0;">
+
+        <!-- SECTION 2: SETTING MACHINES -->
+        <div>
+          <h4 style="margin:0 0 10px 0; color:var(--yellow); font-family:var(--f-display); display:flex; align-items:center; gap:6px;">
+            ⚙️ Machines Currently Under SETTING Mode
+          </h4>
+          <div id="settingList"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 4. INSPECTOR KPI DASHBOARD -->
+    <div id="kpiView" style="display:none;">
+      <div class="card">
+        <div class="card-title">📈 Line Inspector Performance Dashboard</div>
+        <div class="row2" style="margin-bottom:12px;">
+          <div>
+            <label>Inspector निवडा</label>
+            <select id="kpiInspectorSelect" onchange="renderKpiDashboard()">
+              <option value="ALL">-- सर्व Inspectors --</option>
+            </select>
+          </div>
+          <div>
+            <label>कालावधी (Period)</label>
+            <select id="kpiPeriodSelect" onchange="renderKpiDashboard()">
+              <option value="ALL">All Available History</option>
+              <option value="30">Last 30 Days</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-box"><div class="num" id="kpiTotalInProcess">0</div><div class="lbl">In-Process Audits</div></div>
+          <div class="stat-box"><div class="num" id="kpiApprovalRate">0%</div><div class="lbl">First Piece Approval Rate</div></div>
+          <div class="stat-box"><div class="num" id="kpiCmmCompliance">0%</div><div class="lbl">CMM Check Ratio</div></div>
+          <div class="stat-box"><div class="num" id="kpiFinalRejRate">0%</div><div class="lbl">Final Defect Capture</div></div>
+        </div>
+
+        <div class="card-title" style="margin-top:20px;">Inspector Summary</div>
+        <table class="dtable" id="kpiTable">
+          <thead>
+            <tr>
+              <th>Inspector</th>
+              <th>In-Process</th>
+              <th>Approve %</th>
+              <th>Delays</th>
+              <th>Final Lots</th>
+              <th>Rej Qty</th>
+              <th>Rating</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Professional Graphic Login Screen -->
+<div class="overlay" id="loginGate">
+  <div class="login-card">
+    <div class="login-banner">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 5L15 20V45C15 68.3 30 89.7 50 95C70 89.7 85 68.3 85 45V20L50 5Z" fill="#1e293b" stroke="#1a73e8" stroke-width="4"/>
+        <circle cx="50" cy="48" r="28" stroke="#38bdf8" stroke-width="3" stroke-dasharray="4 2"/>
+        <path d="M50 28V36M50 60V68M30 48H38M62 48H70" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        <path d="M38 48L46 56L62 38" stroke="#4ade80" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h2>Quality App</h2>
+      <p>In-Process & Final Audit Control</p>
+    </div>
+    <div class="login-body">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="उदा. rahul">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••">
+      </div>
+      <div class="err-msg" id="loginErr"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Login करा</button>
+    </div>
+  </div>
+</div>
+
+<div c
